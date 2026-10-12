@@ -1,0 +1,1 @@
+"use strict";(self.webpackChunkmagnifi_km_dashboard=self.webpackChunkmagnifi_km_dashboard||[]).push([["9806"],{47376:function(a,e,n){n.r(e),n.d(e,{default:()=>r});var i=n(85893),s=n(67294),f=n(43228),c=n(49436);let d={},t=(0,c.zB)({}),r=(0,f.$j)(t,{})(()=>((0,s.useEffect)(()=>{},[]),(0,i.jsx)("div",{className:d.container,children:"Magnifi Component"})))}}]);

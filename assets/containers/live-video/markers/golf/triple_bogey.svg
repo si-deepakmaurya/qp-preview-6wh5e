@@ -1,0 +1,8 @@
+<svg width="16" height="16" viewBox="-4 -4 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g id="Triple bogey marker">
+<rect x="0.5" y="0.5" width="15" height="15" stroke="white" stroke-width="0.7" fill="none"/>
+<rect x="2.5" y="2.5" width="11" height="11" stroke="white" stroke-width="0.7" fill="none"/>
+<rect x="4.5" y="4.5" width="7" height="7" stroke="white" stroke-width="0.7" fill="none"/>
+<rect x="6.5" y="6.5" width="3" height="3" fill="white"/>
+</g>
+</svg>

@@ -1,0 +1,14 @@
+<svg width="28.000000" height="24.000000" viewBox="0 0 28 24" fill="none" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+	<desc>
+			Created with Pixso.
+	</desc>
+	<defs>
+		<clipPath id="clip1359_156">
+			<rect id="akar-icons:cross" width="28.000000" height="24.000000" fill="white" fill-opacity="0"/>
+		</clipPath>
+	</defs>
+	<rect id="akar-icons:cross" width="28.000000" height="24.000000" fill="#FFFFFF" fill-opacity="0"/>
+	<g clip-path="url(#clip1359_156)">
+		<path id="Vector" d="M23.332 20.666L4.66406 2M23.332 2L4.66406 20.666" stroke="#070707" stroke-opacity="0.300000" stroke-width="4.000000"/>
+	</g>
+</svg>

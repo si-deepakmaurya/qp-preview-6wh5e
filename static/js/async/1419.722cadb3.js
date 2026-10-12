@@ -1,0 +1,1 @@
+"use strict";(self.webpackChunkmagnifi_km_dashboard=self.webpackChunkmagnifi_km_dashboard||[]).push([["1419"],{21139:function(e,t,s){s.r(t),s.d(t,{seedMockSession:()=>n});var a=s(50787);function n(){a.Z.getItem("authToken")||a.Z.setItem("authToken","mock-auth-token"),a.Z.getItem("__uid")||a.Z.setItem("__uid","user_demo123")}}}]);
