@@ -6,7 +6,7 @@
 // mock layer, so they're served here directly, and kept in the cache so repeat visits don't re-download
 // them. API calls still go to the mock handlers.
 const QP_BASE = new URL(self.registration.scope).pathname // e.g. "/qp-preview-6wh5e/"
-const QP_CACHE = 'qp-static-1791967789'
+const QP_CACHE = 'qp-static-1791968251'
 
 addEventListener('activate', function (event) {
   event.waitUntil(
@@ -16,6 +16,16 @@ addEventListener('activate', function (event) {
   )
 })
 
+// Where the CDN copy of this build lives ("" = not using one). Same files, same paths, under the CDN's prefix.
+const QP_CDN = 'https://cdn.jsdelivr.net/gh/si-deepakmaurya/qp-preview-6wh5e@qp-1791968251/'
+
+// CDN first; if it errors or doesn't have the file (e.g. too large for it), the site's own copy.
+function qpFromCdnOrSite(cdnUrl, siteUrl) {
+  return fetch(cdnUrl, { mode: 'cors', credentials: 'omit' })
+    .then((response) => (response.status === 200 ? response : fetch(siteUrl)))
+    .catch(() => fetch(siteUrl))
+}
+
 addEventListener('fetch', function (event) {
   const request = event.request
 
@@ -23,6 +33,15 @@ addEventListener('fetch', function (event) {
   if (request.method !== 'GET' || request.headers.has('range')) return
 
   const url = new URL(request.url)
+  const siteBase = self.location.origin + QP_BASE
+
+  // Files on the CDN: no need to ask the mock layer; cached by the browser (versioned URLs never change).
+  if (QP_CDN && request.url.startsWith(QP_CDN)) {
+    event.stopImmediatePropagation()
+    event.respondWith(qpFromCdnOrSite(request.url, siteBase + request.url.slice(QP_CDN.length)))
+
+    return
+  }
 
   if (url.origin !== self.location.origin) return
 
@@ -36,25 +55,28 @@ addEventListener('fetch', function (event) {
   // Stop the mock layer from also answering this request.
   event.stopImmediatePropagation()
 
-  const target = url.pathname.startsWith('/assets/') ? new URL(QP_BASE + url.pathname.slice(1) + url.search, url.origin).href : url.href
+  const path = url.pathname.startsWith('/assets/') ? url.pathname.slice(1) : url.pathname.slice(QP_BASE.length)
+  const siteUrl = siteBase + path + url.search
+  const cdnUrl = QP_CDN && isAsset ? QP_CDN + path + url.search : ''
 
   event.respondWith(
     caches.open(QP_CACHE).then(async (cache) => {
-      const cached = await cache.match(target)
-      const refresh = fetch(target).then((response) => {
-        if (response.status === 200) cache.put(target, response.clone())
+      const cached = await cache.match(siteUrl)
+      const load = () =>
+        (cdnUrl ? qpFromCdnOrSite(cdnUrl, siteUrl) : fetch(siteUrl)).then((response) => {
+          if (response.status === 200) cache.put(siteUrl, response.clone())
 
-        return response
-      })
+          return response
+        })
 
       if (cached) {
         // Hashed files never change; the rest are refreshed quietly for next time.
-        if (!isHashed) event.waitUntil(refresh.catch(() => {}))
+        if (!isHashed) event.waitUntil(load().catch(() => {}))
 
         return cached
       }
 
-      return refresh
+      return load()
     }),
   )
 })
