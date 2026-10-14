@@ -6,7 +6,7 @@
 // mock layer, so they're served here directly, and kept in the cache so repeat visits don't re-download
 // them. API calls still go to the mock handlers.
 const QP_BASE = new URL(self.registration.scope).pathname // e.g. "/qp-preview-6wh5e/"
-const QP_CACHE = 'qp-static-1791968251'
+const QP_CACHE = 'qp-static-1791968772'
 
 addEventListener('activate', function (event) {
   event.waitUntil(
@@ -17,7 +17,7 @@ addEventListener('activate', function (event) {
 })
 
 // Where the CDN copy of this build lives ("" = not using one). Same files, same paths, under the CDN's prefix.
-const QP_CDN = 'https://cdn.jsdelivr.net/gh/si-deepakmaurya/qp-preview-6wh5e@qp-1791968251/'
+const QP_CDN = 'https://cdn.jsdelivr.net/gh/si-deepakmaurya/qp-preview-6wh5e@qp-1791968772/'
 
 // CDN first; if it errors or doesn't have the file (e.g. too large for it), the site's own copy.
 function qpFromCdnOrSite(cdnUrl, siteUrl) {
