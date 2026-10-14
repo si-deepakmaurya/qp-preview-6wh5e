@@ -6,7 +6,7 @@
 // mock layer, so they're served here directly, and kept in the cache so repeat visits don't re-download
 // them. API calls still go to the mock handlers.
 const QP_BASE = new URL(self.registration.scope).pathname // e.g. "/qp-preview-6wh5e/"
-const QP_CACHE = 'qp-static-1791968772'
+const QP_CACHE = 'qp-static-1791969327'
 
 addEventListener('activate', function (event) {
   event.waitUntil(
@@ -17,7 +17,7 @@ addEventListener('activate', function (event) {
 })
 
 // Where the CDN copy of this build lives ("" = not using one). Same files, same paths, under the CDN's prefix.
-const QP_CDN = 'https://cdn.jsdelivr.net/gh/si-deepakmaurya/qp-preview-6wh5e@qp-1791968772/'
+const QP_CDN = 'https://cdn.jsdelivr.net/gh/si-deepakmaurya/qp-preview-6wh5e@qp-1791969327/'
 
 // CDN first; if it errors or doesn't have the file (e.g. too large for it), the site's own copy.
 function qpFromCdnOrSite(cdnUrl, siteUrl) {
@@ -29,11 +29,33 @@ function qpFromCdnOrSite(cdnUrl, siteUrl) {
 addEventListener('fetch', function (event) {
   const request = event.request
 
-  // Media is streamed with Range requests and is large; leave it to the browser.
-  if (request.method !== 'GET' || request.headers.has('range')) return
+  if (request.method !== 'GET') return
 
   const url = new URL(request.url)
   const siteBase = self.location.origin + QP_BASE
+
+  // The small sample videos (intro/outro cuts, clip versions) come from the CDN too. Players ask for
+  // them in byte ranges, so the range is passed along; the site's copy is the fallback.
+  const isAssetPath = url.pathname.startsWith('/assets/') || url.pathname.startsWith(QP_BASE + 'assets/')
+
+  if (QP_CDN && isAssetPath && url.pathname.endsWith('.mp4') && !url.pathname.includes('/hls/')) {
+    const path = url.pathname.replace(QP_BASE, '').replace(/^\//, '')
+    const range = request.headers.get('range')
+    const headers = range ? { Range: range } : {}
+    const ok = (response) => response.status === 200 || response.status === 206
+
+    event.stopImmediatePropagation()
+    event.respondWith(
+      fetch(QP_CDN + path, { mode: 'cors', credentials: 'omit', headers })
+        .then((response) => (ok(response) ? response : fetch(siteBase + path, { headers })))
+        .catch(() => fetch(siteBase + path, { headers })),
+    )
+
+    return
+  }
+
+  // Other media is streamed with Range requests and is large; leave it to the browser.
+  if (request.headers.has('range')) return
 
   // Files on the CDN: no need to ask the mock layer; cached by the browser (versioned URLs never change).
   if (QP_CDN && request.url.startsWith(QP_CDN)) {
