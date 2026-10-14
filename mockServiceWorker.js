@@ -1,4 +1,64 @@
 /* eslint-disable */
+// Prepended to mockServiceWorker.js in the shareable demo build (see .qp-snapshots/build-demo.sh).
+//
+// Why: the mock layer answers every request by asking the page what to do, so a script or icon had to
+// wait for the (busy) main thread before it could even start downloading. Static files don't need the
+// mock layer, so they're served here directly, and kept in the cache so repeat visits don't re-download
+// them. API calls still go to the mock handlers.
+const QP_BASE = new URL(self.registration.scope).pathname // e.g. "/qp-preview-6wh5e/"
+const QP_CACHE = 'qp-static-1791967669'
+
+addEventListener('activate', function (event) {
+  event.waitUntil(
+    caches
+      .keys()
+      .then((keys) => Promise.all(keys.filter((key) => key.startsWith('qp-static-') && key !== QP_CACHE).map((key) => caches.delete(key)))),
+  )
+})
+
+addEventListener('fetch', function (event) {
+  const request = event.request
+
+  // Media is streamed with Range requests and is large; leave it to the browser.
+  if (request.method !== 'GET' || request.headers.has('range')) return
+
+  const url = new URL(request.url)
+
+  if (url.origin !== self.location.origin) return
+
+  const isHashed = url.pathname.startsWith(QP_BASE + 'static/')
+  // The app asks for "/assets/..." and the site lives under a sub-path, so map it here.
+  const isAsset = url.pathname.startsWith('/assets/') || url.pathname.startsWith(QP_BASE + 'assets/')
+
+  if (!isHashed && !isAsset) return
+  if (/\/hls\/|\.(mp4|ts|m3u8)$/.test(url.pathname)) return
+
+  // Stop the mock layer from also answering this request.
+  event.stopImmediatePropagation()
+
+  const target = url.pathname.startsWith('/assets/') ? new URL(QP_BASE + url.pathname.slice(1) + url.search, url.origin).href : url.href
+
+  event.respondWith(
+    caches.open(QP_CACHE).then(async (cache) => {
+      const cached = await cache.match(target)
+      const refresh = fetch(target).then((response) => {
+        if (response.status === 200) cache.put(target, response.clone())
+
+        return response
+      })
+
+      if (cached) {
+        // Hashed files never change; the rest are refreshed quietly for next time.
+        if (!isHashed) event.waitUntil(refresh.catch(() => {}))
+
+        return cached
+      }
+
+      return refresh
+    }),
+  )
+})
+/* eslint-disable */
 /* tslint:disable */
 
 /**
